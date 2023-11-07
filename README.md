@@ -29,7 +29,7 @@ Furthermore, the app is prepared for usage on local machines only (it means not 
 
 ## How to use
 
-1. Install all dependencies from `requirements.txt`
+1. Install all dependencies from `requirements.txt` (includes dev libraries)
 2. Then run `python manage.py runserver`
 3. Visit `http://localhost:8000`
 4. For testing run `pytest`
