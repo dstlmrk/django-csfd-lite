@@ -5,10 +5,19 @@ The goal is build a web app which contains TOP 300 movies and related actors fro
 by input on the homepage. Search is case-insensitive and doesn't care accent.
 Movie detail page contains links to related actors and vice versa.
 
+## Screens
+
+### Homepage
+![](screenshot_index.png)
+
+### Detail
+![](screenshot_detail.png)
+
+
 ## Web scraping
 
 The Django command downloads movies and actors with standard request and beautifulsoup libraries.
-The intent is to protect the database and don't call requests per movie or actor (with `bulk_create`).
+The intent is to protect the database and don't call requests per movie or actor (solved by `bulk_create`).
 
 On the other hand db queries are sent for every list of movies page because I don't want to hold
 all temporary data in python memory. For 300 movies only on my machine it's really unnecessary,
