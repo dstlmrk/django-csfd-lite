@@ -1,0 +1,53 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<h1>CSFD Lite 🎥</h1>
+
+<form action="{% url 'index' %}" method="GET">
+    <fieldset>
+        <legend><strong>Are you looking for a movie or an actor?</strong></legend>
+        {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+        <input type="text" name="q" id="search" value="{{ query }}" placeholder="Pelíšky">
+        <input type="submit" value="Search">
+    </fieldset>
+</form>
+
+{% if movies or actors %}
+<div class="row">
+    <div class="column"><h2>Movies</h2>
+        {% if movies %}
+        <ul>
+            {% for movie in movies %}
+            <li><a href="{% url 'movie' movie.id %}">{{ movie.name }}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No movies found.</p>
+        {% endif %}
+    </div>
+    <div class="column"><h2>Actors</h2>
+        {% if actors %}
+        <ul>
+            {% for actor in actors %}
+            <li><a href="/actor/{{ actor.id }}/">{{ actor.name }}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No actors found.</p>
+        {% endif %}
+    </div>
+</div>
+{% elif query %}
+<p>No movies or actors found. ❌ Tri it again.</p>
+{% endif %}
+
+<style>
+    .row {
+        display: flex;
+    }
+
+    .column {
+        flex: 50%;
+    }
+</style>
+{% endblock content %}

@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<h1>{{ movie.name }}</h1>
+<h2>Actors</h2>
+{% if movie.actors.exists %}
+<ul>
+    {% for actor in movie.actors.all %}
+    <li><a href="{% url 'actor' actor.id %}">{{ actor.name }}</a></li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No actors found.</p>
+{% endif %}
+{% endblock content %}
