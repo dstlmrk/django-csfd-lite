@@ -1,5 +1,4 @@
 import pytest
-
 from core.models import Actor, Movie
 from core.utils import normalize, search
 
