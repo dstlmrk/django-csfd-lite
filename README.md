@@ -8,10 +8,10 @@ Movie detail page contains links to related actors and vice versa.
 ## Screens
 
 ### Homepage
-![](screenshot_index.png)
+![](screenshots/index.png)
 
 ### Detail
-![](screenshot_detail.png)
+![](screenshots/detail.png)
 
 
 ## Web scraping
