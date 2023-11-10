@@ -2,9 +2,8 @@ import re
 import time
 
 import pytest
-from django.core.management import call_command
-
 from core.models import Actor, Movie
+from django.core.management import call_command
 
 HTML_MOVIES = """
     <a href="/film/2294-vykoupeni-z-veznice-shawshank/" class="film-title-name">

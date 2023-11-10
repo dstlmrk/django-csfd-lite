@@ -3,11 +3,10 @@ from typing import List, Tuple
 
 import requests
 from bs4 import BeautifulSoup
-from django.core.management.base import BaseCommand
-from tqdm import tqdm
-
 from core.models import Actor, Movie
 from core.utils import normalize
+from django.core.management.base import BaseCommand
+from tqdm import tqdm
 
 URL = "https://www.csfd.cz{}"
 
