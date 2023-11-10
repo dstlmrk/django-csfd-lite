@@ -2,6 +2,11 @@ from django.db import models
 
 
 class Actor(models.Model):
+    csfd_id = models.CharField(
+        max_length=200,
+        null=False,
+        unique=True,
+    )
     name = models.CharField(
         max_length=200,
         null=False,

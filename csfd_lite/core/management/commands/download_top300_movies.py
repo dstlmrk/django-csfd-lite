@@ -1,13 +1,13 @@
-from collections import defaultdict
 from time import sleep
 from typing import List, Tuple
 
 import requests
 from bs4 import BeautifulSoup
-from core.models import Actor, Movie
-from core.utils import normalize
 from django.core.management.base import BaseCommand
 from tqdm import tqdm
+
+from core.models import Actor, Movie
+from core.utils import normalize
 
 URL = "https://www.csfd.cz{}"
 
@@ -46,64 +46,75 @@ class Command(BaseCommand):
         return [(link.text.strip(), link["href"]) for link in links]
 
     @staticmethod
-    def parse_actors(detail_soup: BeautifulSoup) -> List[str]:
+    def parse_actors(detail_soup: BeautifulSoup) -> List[Tuple[str, str]]:
         """
-        Returns list of actors names
+        Returns list of actors names and their CSFD identifier
         """
         links = detail_soup.find("h4", string="Hrají:").parent.select("a[href*=tvurce]")
-        return [link.text for link in links]
+        return [
+            (link.text, link["href"].removeprefix("/tvurce/").split("-")[0])
+            for link in links
+        ]
 
     def handle(self, *args, **options):
         self.clear_database()
-        actors_ids = {}
+
+        movie_id = actor_id = 0
+        movies = {}
+        actors = {}
 
         with tqdm(total=299) as pbar:
             for page in ["", "?from=100", "?from=200"]:
-                # clear for every page
-                actors_set = set()
-                actors_in_movies = defaultdict(list)
-
                 # scrape the web
                 list_soup = self.get_soap(
                     URL.format("/zebricky/filmy/nejlepsi{}".format(page))
                 )
                 for movie_name, url_path in self.parse_movies(list_soup):
                     detail_soup = self.get_soap(URL.format(url_path))
-                    for actor_name in self.parse_actors(detail_soup):
-                        actors_in_movies[movie_name].append(actor_name)
-                        if actor_name not in actors_ids:
-                            actors_set.add(actor_name)
+                    actors_in_movie = []
+                    for actor_name, actor_csfd_id in self.parse_actors(detail_soup):
+                        if actor_csfd_id in actors.keys():
+                            actors_in_movie.append(actors[actor_csfd_id]["id"])
+                        else:
+                            actor_id += 1
+                            actors[actor_csfd_id] = {"id": actor_id, "name": actor_name}
+                            actors_in_movie.append(actor_id)
+                    movie_id += 1
+                    movies[movie_id] = {"name": movie_name, "actors": actors_in_movie}
                     pbar.update(1)
 
-                # bulk create for movies and actors
-                db_movies = Movie.objects.bulk_create(
-                    objs=[
-                        Movie(name=movie, normalized_name=normalize(movie))
-                        for movie in actors_in_movies.keys()
-                    ]
-                )
-                db_actors = Actor.objects.bulk_create(
-                    objs=[
-                        Actor(name=actor, normalized_name=normalize(actor))
-                        for actor in actors_set
-                    ],
-                )
+            # bulk create for movies and actors
+            Movie.objects.bulk_create(
+                [
+                    Movie(
+                        id=id_,
+                        name=movie["name"],
+                        normalized_name=normalize(movie["name"]),
+                    )
+                    for id_, movie in movies.items()
+                ]
+            )
+            Actor.objects.bulk_create(
+                [
+                    Actor(
+                        id=actor["id"],
+                        csfd_id=csfd_id,
+                        name=actor["name"],
+                        normalized_name=normalize(actor["name"]),
+                    )
+                    for csfd_id, actor in actors.items()
+                ],
+            )
 
-                # save ids from actors (dict because of fast access)
-                actors_ids.update({actor.name: actor.id for actor in db_actors})
+            # prepare m2m table
+            m2m = []
+            for movie_id, movie in movies.items():
+                for actor_id in movie["actors"]:
+                    m2m.append(
+                        Movie.actors.through(movie_id=movie_id, actor_id=actor_id)
+                    )
 
-                # prepare m2m table
-                m2m = []
-                for movie in db_movies:
-                    for actor_in_movie in actors_in_movies[movie.name]:
-                        m2m.append((movie.id, actors_ids[actor_in_movie]))
-
-                # bulk create for m2m relation
-                Movie.actors.through.objects.bulk_create(
-                    objs=[
-                        Movie.actors.through(movie_id=pair[0], actor_id=pair[1])
-                        for pair in m2m  # pair = (movie_id, actor_id)
-                    ],
-                )
+            # bulk create for m2m relation
+            Movie.actors.through.objects.bulk_create(m2m)
 
         self.stdout.write(self.style.SUCCESS("Successfully downloaded"))

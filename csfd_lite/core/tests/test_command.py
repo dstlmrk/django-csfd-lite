@@ -2,8 +2,9 @@ import re
 import time
 
 import pytest
-from core.models import Actor, Movie
 from django.core.management import call_command
+
+from core.models import Actor, Movie
 
 HTML_MOVIES = """
     <a href="/film/2294-vykoupeni-z-veznice-shawshank/" class="film-title-name">
@@ -20,7 +21,10 @@ HTML_ACTORS = """
             <a href="/tvurce/103-tim-robbins/">Tim Robbins</a>
         <span class="more-member-1">
             <a href="/tvurce/37545-neil-giuntoli/">Neil Giuntoli</a>
-        </span> 
+        </span>
+        <span class="more-member-1">
+            <a href="/tvurce/99999-neil-giuntoli/">Neil Giuntoli</a>
+        </span>
     </div>
 """
 
@@ -43,8 +47,5 @@ def test_command(monkeypatch, requests_mock):
 
     assert movie.name == "Vykoupení z věznice Shawshank"
     assert movie.normalized_name == "vykoupeni z veznice shawshank"
-    assert {actor.name for actor in movie.actors.all()} == {
-        "Tim Robbins",
-        "Neil Giuntoli",
-    }
-    assert Actor.objects.count() == 2
+    assert {actor.csfd_id for actor in movie.actors.all()} == {"103", "37545", "99999"}
+    assert Actor.objects.count() == 3

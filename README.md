@@ -19,11 +19,6 @@ Movie detail page contains links to related actors and vice versa.
 The Django command downloads movies and actors with standard request and beautifulsoup libraries.
 The intent is to protect the database and don't call requests per movie or actor (solved by `bulk_create`).
 
-On the other hand db queries are sent for every list of movies page because I don't want to hold
-all temporary data in python memory. For 300 movies only on my machine it's really unnecessary,
-but it could be problem for environment with limited memory and larger number of movies.
-This part is questionable because it depends on the limits that we have. Another question is transaction usage.
-
 The scraping is limited by `sleep` function because of protecting the target website.
 
 ## Disclaimer
